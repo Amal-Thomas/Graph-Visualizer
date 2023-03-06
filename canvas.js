@@ -10,6 +10,7 @@ const mark_color = "#243763";
 const travel_color = "#FBC252";
 
 var undo = [];
+var negative_weight = false;
 
 var button1 = buttons[0]; //Insert Nodes
 var button2 = buttons[1]; //Insert Edges
@@ -947,9 +948,17 @@ function select_destination(event) {
         }
         else {
             destination = destinationlist[0];
-            traversal = breadthfirsttraversal(source, new Set());
             mark_a_node(destination);
-            path = breadthfirstsearch(source, destination);
+            if (!(weighted)) {
+                traversal = breadthfirsttraversal(source, new Set());
+                path = breadthfirstsearch(source, destination);
+            } else if ((weighted) && (!negative_weight)) {
+                [traversal, distance, path] = findShortestPath(graph, source, destination);
+                console.log(traversal);
+            } else {
+                traversal = bellmanford(source, new Set());
+                path = breadthfirstsearch(source, destination);
+            }
             button6.disabled = false;
             canvas.removeEventListener('click', select_destination);
             canvas.addEventListener('click', select_source);
@@ -1019,6 +1028,8 @@ button5.addEventListener('click', function () {
     canvas.removeEventListener('click', insert_node);
     canvas.removeEventListener('click', insert_edge);
     canvas.removeEventListener('click', restoreimage);
+    console.log(graph);
+    console.log(graphxy);
 
     c.putImageData(imageData, 0, 0);
     button1_active = false;
@@ -1053,8 +1064,13 @@ button6.addEventListener('click', function () {
     button2_active = false;
     button2.style.backgroundColor = "white";
     button2.style.color = "#A084DC";
-
-    animatetraversal();
+    if (!(weighted)) {
+        animatetraversal();
+    } else if ((weighted) && (!negative_weight)) {
+        animatetraversal();
+    } else {
+        animatebellmanford();
+    }
 
     console.log(graph);
     console.log(edges);

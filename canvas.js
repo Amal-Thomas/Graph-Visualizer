@@ -115,6 +115,7 @@ var graph = {};
 var graphxy = {};
 var edges = [];
 var circleArray = [];
+var arc_reverse_identifier = {};
 
 var position_error_flag = true;
 
@@ -242,146 +243,12 @@ function dist(x1, y1, x2, y2) {
 }
 
 function draw_arc(x1, y1, x2, y2, reverse, weight, edge) {
-    c.beginPath();
-    let ccw = false;
-    let d = dist(x1, y1, x2, y2)
-
-    let f = d / 5;
-    if (f > 10) {
-        f = 10;
-    }
-    let arc_radius = d * d / (8 * f) + f / 2;
-    let m = (y1 - y2) / (x1 - x2);
-    let theta_m_inv = Math.atan(-1 / m);
-    let arrow = 0;
-    let arrowx = 0;
-    let arrowy = 0;
     let weightx = 0;
     let weighty = 0;
-    let weight_offset = 10;
-    let weight_error_flag = false;
-    if (reverse) {
 
-        let arc_x = (x1 + x2) / 2 - (arc_radius - f) * Math.cos(theta_m_inv);
-        let arc_y = (y1 + y2) / 2 - (arc_radius - f) * Math.sin(theta_m_inv);
-        let m1 = (y1 - arc_y) / (x1 - arc_x);
-        let m2 = (y2 - arc_y) / (x2 - arc_x);
-        let arc_end = Math.atan(m1);
-        let arc_start = Math.atan(m2);
-        let d_arc = 32 / arc_radius;
-        if (x2 < x1) {
-            if (arc_end - arc_start < -Math.PI / 2) {
-                arc_start = arc_start + Math.PI;
-                weight_error_flag = true;
-            }
-            if (arc_end - arc_start > Math.PI / 2) {
-                arc_start = arc_start - Math.PI;
-                weight_error_flag = true;
-            }
-        }
-        else {
-            if (arc_end - arc_start < -Math.PI / 2) {
-                arc_end = arc_end + Math.PI;
-            }
-            if (arc_end - arc_start > Math.PI / 2) {
-                arc_end = arc_end - Math.PI;
-            }
-        }
+    arc_reverse_identifier[JSON.stringify([edge[0], edge[1]])] = reverse;
 
-        if (y2 > y1) {
-            ccw = true;
-            d_arc = -d_arc;
-        }
-
-        c.arc(arc_x - offsetx, arc_y - offsety, arc_radius, arc_start + d_arc, arc_end - d_arc, ccw);
-        arrow = arc_start + d_arc;
-        arrowx = arc_x - offsetx + arc_radius * Math.cos(arrow);
-        arrowy = arc_y - offsety + arc_radius * Math.sin(arrow);
-
-
-
-        weightx = arc_x - offsetx + (arc_radius + weight_offset) * Math.cos((arc_start + arc_end) / 2);
-        weighty = arc_y - offsety + (arc_radius + weight_offset) * Math.sin((arc_start + arc_end) / 2);
-
-        if (weighty > arc_y - offsety) weighty = weighty + 15;
-
-        if (weight_error_flag) {
-            weightx = arc_x - offsetx - (arc_radius + weight_offset) * Math.cos((arc_start + arc_end) / 2);
-            weighty = arc_y - offsety - (arc_radius + weight_offset) * Math.sin((arc_start + arc_end) / 2);
-        }
-
-        if (y2 > y1) {
-            arrow = arrow - Math.PI;
-        }
-        arrow = arrow - Math.PI;
-    }
-    else {
-
-        let arc_x = (x1 + x2) / 2 + (arc_radius - f) * Math.cos(theta_m_inv);
-        let arc_y = (y1 + y2) / 2 + (arc_radius - f) * Math.sin(theta_m_inv);
-        let m1 = (y1 - arc_y) / (x1 - arc_x);
-        let m2 = (y2 - arc_y) / (x2 - arc_x);
-        let arc_start = Math.PI + Math.atan(m1);
-        let arc_end = Math.PI + Math.atan(m2);
-        let d_arc = 32 / arc_radius;
-        if (x2 < x1) {
-            if (arc_end - arc_start < -Math.PI / 2) {
-                arc_start = arc_start + Math.PI;
-                weight_error_flag = true;
-            }
-            if (arc_end - arc_start > Math.PI / 2) {
-                arc_start = arc_start - Math.PI;
-                weight_error_flag = true;
-            }
-
-
-        }
-        else {
-            if (arc_end - arc_start < -Math.PI / 2) {
-                arc_end = arc_end + Math.PI;
-            }
-            if (arc_end - arc_start > Math.PI / 2) {
-                arc_end = arc_end - Math.PI;
-            }
-
-        }
-        if (y2 > y1) {
-            ccw = true;
-            d_arc = -d_arc;
-        }
-        c.arc(arc_x - offsetx, arc_y - offsety, arc_radius, arc_start + d_arc, arc_end - d_arc, ccw);
-        arrow = arc_end - d_arc;
-
-        arrowx = arc_x - offsetx + arc_radius * Math.cos(arrow);
-        arrowy = arc_y - offsety + arc_radius * Math.sin(arrow);
-
-        weightx = arc_x - offsetx + (arc_radius + weight_offset) * Math.cos((arc_start + arc_end) / 2);
-        weighty = arc_y - offsety + (arc_radius + weight_offset) * Math.sin((arc_start + arc_end) / 2);
-
-        if (weighty >= arc_y - offsety) weighty = weighty + 15;
-
-        if (weight_error_flag) {
-            weightx = arc_x - offsetx - (arc_radius + weight_offset) * Math.cos((arc_start + arc_end) / 2);
-            weighty = arc_y - offsety - (arc_radius + weight_offset) * Math.sin((arc_start + arc_end) / 2);
-        }
-
-
-        if (y2 > y1) {
-            arrow = arrow - Math.PI;
-        }
-    }
-
-
-    c.strokeStyle = "#FF6363";
-    c.stroke();
-
-    c.save();
-    c.translate(arrowx, arrowy);
-    c.rotate(arrow);
-    c.font = "20px serif";
-    c.fillStyle = "#FF6363";
-    c.fillText('\u25BC', 0, 0);
-    c.restore();
+    [weightx, weighty] = mark_arc(x1, y1, x2, y2, reverse, false, "#FF6363");
 
     if (weighted) {
         weightinput.value = "";
@@ -397,7 +264,9 @@ function draw_arc(x1, y1, x2, y2, reverse, weight, edge) {
             weightinputbutton.removeEventListener('click', drawweight);
             document.removeEventListener('keypress', drawweightenter);
 
+            if (weight < 0) negative_weight = true;
             graph[edge[0]].push([edge[1], weight]);
+            edges[edges.length - 1].push(weight);
 
             undo_update();
             if (button2_active == true) {
@@ -478,8 +347,13 @@ function draw(x1, y1, x2, y2, finish_edge, edge) {
                 weightinputbutton.removeEventListener('click', drawweight);
                 document.removeEventListener('keypress', drawweightenter);
 
+                if (weight < 0) negative_weight = true;
+
                 graph[edge[0]].push([edge[1], weight]);
                 graph[edge[1]].push([edge[0], weight]);
+                edges[edges.length - 1].push(weight);
+                [a, b, w] = edges[edges.length - 1];
+                edges.push[b, a, w];
 
                 undo_update();
                 if (button2_active == true) {
@@ -816,10 +690,6 @@ function breadthfirstsearch(source, end) {
 var traversal = [];
 var path = [];
 
-const sleep = (milliseconds) => {
-    return new Promise(resolve => setTimeout(resolve, milliseconds))
-}
-
 function animatetraversal() {
     canvas.removeEventListener('click', restoreimage);
     var i = 1;
@@ -956,8 +826,8 @@ function select_destination(event) {
                 [traversal, distance, path] = findShortestPath(graph, source, destination);
                 console.log(traversal);
             } else {
-                traversal = bellmanford(source, new Set());
-                path = breadthfirstsearch(source, destination);
+                [distance, path] = findShortestPath_negweight(edges, source, destination);
+                console.log(distance, path);
             }
             button6.disabled = false;
             canvas.removeEventListener('click', select_destination);
@@ -1069,7 +939,7 @@ button6.addEventListener('click', function () {
     } else if ((weighted) && (!negative_weight)) {
         animatetraversal();
     } else {
-        animatebellmanford();
+        animatebellmanford(path);
     }
 
     console.log(graph);
